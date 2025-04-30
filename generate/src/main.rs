@@ -17,7 +17,7 @@ fn write_group_enum<W: io::Write>(w: &mut W, unicode_data: &unicode::ParsedData)
     writeln!(w, "/// Based on Unicode CLDR data.")?;
     writeln!(
         w,
-        "#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]"
+        "#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, uniffi::Enum, PartialOrd, Ord)]"
     )?;
     writeln!(
         w,
@@ -47,17 +47,21 @@ fn write_emoji_struct<W: io::Write>(
     let uv = emoji.unicode_version();
     write!(
         w,
-        "Emoji {{ emoji: \"{e}\", name: \"{name}\", unicode_version: {uv:?}, group: Group::{group}",
+        "Emoji {{ emoji: \"{e}\".to_string(), name: \"{name}\".to_string(), unicode_version: {uv:?}, group: Group::{group}",
     )?;
     match emoji.skin_tone() {
         Some(tone) => write!(
             w,
-            ", skin_tone: Some(({default_skin_tone_index}, {skin_tone_count}, SkinTone::{tone:?}))",
+            r#", skin_tone: Some(SkinToneData {{ first: {default_skin_tone_index}, second: {skin_tone_count}, tone: SkinTone::{tone:?} }})"#,
         )?,
         None => write!(w, ", skin_tone: None")?,
     }
     match &github_data.get(e) {
-        Some(github) => write!(w, ", aliases: Some(&{:?}) }}", github.aliases())?,
+        Some(github) => write!(
+            w,
+            ", aliases: Some({:?}.map(str::to_string).to_vec()) }}",
+            github.aliases()
+        )?,
         None => write!(w, ", aliases: None }}")?,
     }
     Ok(())
@@ -143,6 +147,7 @@ fn main() -> Result<()> {
     writeln!(f, "#![cfg_attr(rustfmt, rustfmt::skip)]\n")?;
     writeln!(f, "pub mod shortcode;")?;
     writeln!(f, "pub mod unicode;\n")?;
+    writeln!(f, "use once_cell::sync::Lazy;")?;
     writeln!(f, "use crate::{{Emoji, SkinTone, UnicodeVersion}};\n")?;
 
     write_group_enum(&mut f, &unicode_data)?;
