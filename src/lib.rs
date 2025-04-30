@@ -102,7 +102,7 @@
 //! [examples/replace.rs]: https://github.com/rossmacarthur/emojis/blob/trunk/examples/replace.rs
 //! [gemoji]: https://github.com/github/gemoji
 
-#![no_std]
+uniffi::setup_scaffolding!();
 
 #[cfg(test)]
 extern crate alloc;
@@ -116,14 +116,21 @@ use core::hash;
 
 pub use crate::gen::Group;
 
+#[derive(uniffi::Record, Debug)] // If using proc macros
+struct SkinToneData {
+    first: u16,
+    second: u8,
+    tone: SkinTone,
+}
+
 /// Represents an emoji.
 ///
 /// See [Unicode.org](https://unicode.org/emoji/charts/full-emoji-list.html) for
 /// more information.
-#[derive(Debug)]
+#[derive(Debug, uniffi::Record)]
 pub struct Emoji {
-    emoji: &'static str,
-    name: &'static str,
+    emoji: String,
+    name: String,
     unicode_version: UnicodeVersion,
     group: Group,
 
@@ -132,13 +139,13 @@ pub struct Emoji {
     //
     //     (<id>, <n>, <skin_tone>)
     //
-    skin_tone: Option<(u16, u8, SkinTone)>,
+    skin_tone: Option<SkinToneData>,
 
-    aliases: Option<&'static [&'static str]>,
+    aliases: Option<Vec<String>>,
 }
 
 /// A Unicode version.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, uniffi::Record, PartialOrd, Ord)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct UnicodeVersion {
     major: u32,
@@ -149,6 +156,7 @@ pub struct UnicodeVersion {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[non_exhaustive]
+#[derive(uniffi::Enum)]
 pub enum SkinTone {
     Default,
     Light,
@@ -207,7 +215,7 @@ impl Emoji {
     /// ```
     #[inline]
     pub const fn as_str(&self) -> &str {
-        self.emoji
+        self.emoji.as_str()
     }
 
     /// Returns this emoji as slice of UTF-8 encoded bytes.
@@ -233,7 +241,7 @@ impl Emoji {
     /// ```
     #[inline]
     pub const fn name(&self) -> &str {
-        self.name
+        self.name.as_str()
     }
 
     /// Returns the Unicode version this emoji first appeared in.
@@ -321,7 +329,11 @@ impl Emoji {
     /// ```
     #[inline]
     pub fn skin_tones(&self) -> Option<impl Iterator<Item = &Self> + Clone> {
-        let (i, n, _) = self.skin_tone?;
+        let SkinToneData {
+            first: i,
+            second: n,
+            ..
+        } = self.skin_tone?;
         Some(crate::gen::EMOJIS[i as usize..].iter().take(n as usize))
     }
 
@@ -406,7 +418,7 @@ impl Emoji {
     /// [gemoji]: https://github.com/github/gemoji
     #[inline]
     pub fn shortcodes(&self) -> impl Iterator<Item = &str> + Clone {
-        self.aliases.into_iter().flatten().copied()
+        self.aliases.into_iter().flatten().as_str()
     }
 }
 
