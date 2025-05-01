@@ -200,19 +200,23 @@ impl UnicodeVersion {
     }
 }
 
-// 4) Any purely‐Rust helpers go here, not in the #[uniffi::export] impl:
+#[uniffi::export]
+#[inline]
+pub fn skin_tones(emoji: &Emoji) -> Vec<Emoji> {
+    let data = match &emoji.skin_tone {
+        Some(d) => d,
+        None => return vec![],
+    };
+    crate::gen::EMOJIS
+        .iter()
+        .skip(data.first as usize)
+        .take(data.second as usize)
+        .cloned()
+        .collect()
+}
+
 impl Emoji {
-    /// Borrow the raw &str (used only inside Rust)
-    pub fn as_str(&self) -> &str {
-        &self.emoji
-    }
-
-    /// Borrow the raw bytes (used only inside Rust)
-    pub fn raw_bytes(&self) -> &[u8] {
-        self.emoji.as_bytes()
-    }
-
-    pub fn skin_tones(&self) -> Vec<Emoji> {
+    pub fn skin_tones(&'static self) -> Vec<Emoji> {
         let data = match &self.skin_tone {
             Some(d) => d,
             None => return vec![],
@@ -223,6 +227,19 @@ impl Emoji {
             .take(data.second as usize)
             .cloned()
             .collect()
+    }
+}
+
+// 4) Any purely‐Rust helpers go here, not in the #[uniffi::export] impl:
+impl Emoji {
+    /// Borrow the raw &str (used only inside Rust)
+    pub fn as_str(&self) -> &str {
+        &self.emoji
+    }
+
+    /// Borrow the raw bytes (used only inside Rust)
+    pub fn raw_bytes(&self) -> &[u8] {
+        self.emoji.as_bytes()
     }
 
     pub fn skin_tone(&self) -> Option<SkinTone> {
@@ -417,10 +434,11 @@ pub fn iter() -> impl Iterator<Item = &'static Emoji> + Clone {
 /// assert_eq!(chipmunk.shortcode().unwrap(), "chipmunk");
 /// ```
 #[inline]
-pub fn get(s: &str) -> Option<&'static Emoji> {
+#[uniffi::export]
+pub fn get(s: &str) -> Option<Emoji> {
     crate::gen::unicode::MAP
         .get(s)
-        .map(|&i| &crate::gen::EMOJIS[i])
+        .map(|&i| crate::gen::EMOJIS[i].clone())
 }
 
 /// Lookup an emoji by GitHub shortcode.
