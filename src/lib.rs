@@ -200,221 +200,40 @@ impl UnicodeVersion {
     }
 }
 
+// 4) Any purely‐Rust helpers go here, not in the #[uniffi::export] impl:
 impl Emoji {
-    /// Returns this emoji as a string.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// let rocket = emojis::get("🚀").unwrap();
-    /// assert_eq!(rocket.as_str(), "🚀")
-    /// ```
-    #[inline]
-    pub const fn as_str(&self) -> &str {
-        self.emoji.as_str()
+    /// Borrow the raw &str (used only inside Rust)
+    pub fn as_str(&self) -> &str {
+        &self.emoji
     }
 
-    /// Returns this emoji as slice of UTF-8 encoded bytes.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// let rocket = emojis::get("🚀").unwrap();
-    /// assert_eq!(rocket.as_bytes(), &[0xf0, 0x9f, 0x9a, 0x80]);
-    /// ```
-    #[inline]
-    pub const fn as_bytes(&self) -> &[u8] {
+    /// Borrow the raw bytes (used only inside Rust)
+    pub fn raw_bytes(&self) -> &[u8] {
         self.emoji.as_bytes()
     }
 
-    /// Returns the CLDR name for this emoji.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// let cool = emojis::get("😎").unwrap();
-    /// assert_eq!(cool.name(), "smiling face with sunglasses");
-    /// ```
-    #[inline]
-    pub const fn name(&self) -> &str {
-        self.name.as_str()
+    pub fn skin_tones(&self) -> Vec<Emoji> {
+        let data = match &self.skin_tone {
+            Some(d) => d,
+            None => return vec![],
+        };
+        crate::gen::EMOJIS
+            .iter()
+            .skip(data.first as usize)
+            .take(data.second as usize)
+            .cloned()
+            .collect()
     }
 
-    /// Returns the Unicode version this emoji first appeared in.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use emojis::UnicodeVersion;
-    ///
-    /// let villain = emojis::get("🦹").unwrap();
-    /// assert_eq!(villain.unicode_version(), UnicodeVersion::new(11, 0));
-    /// ```
-    #[inline]
-    pub const fn unicode_version(&self) -> UnicodeVersion {
-        self.unicode_version
-    }
-
-    /// Returns the group this emoji belongs to.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use emojis::Group;
-    ///
-    /// let flag = emojis::get("🇿🇦").unwrap();
-    /// assert_eq!(flag.group(), Group::Flags);
-    /// ```
-    #[inline]
-    pub const fn group(&self) -> Group {
-        self.group
-    }
-
-    /// Returns the skin tone of this emoji.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use emojis::SkinTone;
-    ///
-    /// let peace = emojis::get("✌️").unwrap();
-    /// assert_eq!(peace.skin_tone(), Some(SkinTone::Default));
-    ///
-    /// let peace = emojis::get("✌🏽").unwrap();
-    /// assert_eq!(peace.skin_tone(), Some(SkinTone::Medium));
-    /// ```
-    ///
-    /// For emojis where skin tones are not applicable this will be `None`.
-    ///
-    /// ```
-    /// let cool = emojis::get("😎").unwrap();
-    /// assert!(cool.skin_tone().is_none());
-    /// ```
-    #[inline]
     pub fn skin_tone(&self) -> Option<SkinTone> {
-        self.skin_tone.map(|(_, _, v)| v)
+        self.skin_tone.as_ref().map(|d| d.tone)
     }
 
-    /// Returns an iterator over the emoji and all the related skin tone emojis.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use emojis::Emoji;
-    ///
-    /// let luck = emojis::get("🤞🏼").unwrap();
-    /// let skin_tones: Vec<_> = luck.skin_tones().unwrap().map(Emoji::as_str).collect();
-    /// assert_eq!(skin_tones, ["🤞", "🤞🏻", "🤞🏼", "🤞🏽", "🤞🏾", "🤞🏿"]);
-    /// ```
-    ///
-    /// Some emojis have 26 skin tones!
-    ///
-    /// ```
-    /// use emojis::SkinTone;
-    ///
-    /// let couple = emojis::get("👩🏿‍❤️‍👨🏼").unwrap();
-    /// let skin_tones = couple.skin_tones().unwrap().count();
-    /// assert_eq!(skin_tones, 26);
-    /// ```
-    ///
-    /// For emojis where skin tones are not applicable this will return `None`.
-    ///
-    /// ```
-    /// let cool = emojis::get("😎").unwrap();
-    /// assert!(cool.skin_tones().is_none());
-    /// ```
-    #[inline]
-    pub fn skin_tones(&self) -> Option<impl Iterator<Item = &Self> + Clone> {
-        let SkinToneData {
-            first: i,
-            second: n,
-            ..
-        } = self.skin_tone?;
-        Some(crate::gen::EMOJIS[i as usize..].iter().take(n as usize))
-    }
-
-    /// Returns a version of this emoji that has the given skin tone.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use emojis::SkinTone;
-    ///
-    /// let raised_hands = emojis::get("🙌🏼")
-    ///     .unwrap()
-    ///     .with_skin_tone(SkinTone::MediumDark)
-    ///     .unwrap();
-    /// assert_eq!(raised_hands, emojis::get("🙌🏾").unwrap());
-    /// ```
-    ///
-    /// ```
-    /// use emojis::SkinTone;
-    ///
-    /// let couple = emojis::get("👩‍❤️‍👨")
-    ///     .unwrap()
-    ///     .with_skin_tone(SkinTone::DarkAndMediumLight)
-    ///     .unwrap();
-    /// assert_eq!(couple, emojis::get("👩🏿‍❤️‍👨🏼").unwrap());
-    /// ```
-    ///
-    /// For emojis where the skin tone is not applicable this will return
-    /// `None`.
-    ///
-    /// ```
-    /// use emojis::SkinTone;
-    ///
-    /// let cool = emojis::get("😎").unwrap();
-    /// assert!(cool.with_skin_tone(SkinTone::Medium).is_none());
-    /// ```
-    #[inline]
-    pub fn with_skin_tone(&self, skin_tone: SkinTone) -> Option<&Self> {
-        self.skin_tones()?
-            .find(|emoji| emoji.skin_tone().unwrap() == skin_tone)
-    }
-
-    /// Returns the first GitHub shortcode for this emoji.
-    ///
-    /// Most emojis only have zero or one shortcode but for a few there are
-    /// multiple. Use the [`shortcodes()`][Emoji::shortcodes] method to return
-    /// all the shortcodes. See [gemoji] for more information.
-    ///
-    /// For emojis that have zero shortcodes this will return `None`.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// let thinking = emojis::get("🤔").unwrap();
-    /// assert_eq!(thinking.shortcode().unwrap(), "thinking");
-    /// ```
-    ///
-    /// [gemoji]: https://github.com/github/gemoji
-    #[inline]
-    pub fn shortcode(&self) -> Option<&str> {
-        self.aliases.and_then(|aliases| aliases.first().copied())
-    }
-
-    /// Returns an iterator over the GitHub shortcodes for this emoji.
-    ///
-    /// Most emojis only have zero or one shortcode but for a few there are
-    /// multiple. Use the [`shortcode()`][Emoji::shortcode] method to return the
-    /// first shortcode. See [gemoji] for more information.
-    ///
-    /// For emojis that have zero shortcodes this will return an empty iterator.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// let laughing = emojis::get("😆").unwrap();
-    /// assert_eq!(
-    ///     laughing.shortcodes().collect::<Vec<_>>(),
-    ///     vec!["laughing", "satisfied"]
-    /// );
-    /// ```
-    ///
-    /// [gemoji]: https://github.com/github/gemoji
-    #[inline]
-    pub fn shortcodes(&self) -> impl Iterator<Item = &str> + Clone {
-        self.aliases.into_iter().flatten().as_str()
+    /// Iterator over variants with skin_tone (Rust only)
+    pub fn skin_tones_iter(&self) -> Option<impl Iterator<Item = &Emoji> + Clone> {
+        let d = self.skin_tone.as_ref()?;
+        let slice: &[Emoji] = &*crate::gen::EMOJIS;
+        Some(slice.iter().skip(d.first as usize).take(d.second as usize))
     }
 }
 
