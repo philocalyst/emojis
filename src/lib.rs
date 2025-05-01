@@ -104,9 +104,6 @@
 
 uniffi::setup_scaffolding!();
 
-#[cfg(test)]
-extern crate alloc;
-
 mod gen;
 
 use core::cmp;
@@ -116,7 +113,7 @@ use core::hash;
 
 pub use crate::gen::Group;
 
-#[derive(uniffi::Record, Debug)] // If using proc macros
+#[derive(uniffi::Record, Debug, Clone)] // If using proc macros
 struct SkinToneData {
     first: u16,
     second: u8,
@@ -127,7 +124,7 @@ struct SkinToneData {
 ///
 /// See [Unicode.org](https://unicode.org/emoji/charts/full-emoji-list.html) for
 /// more information.
-#[derive(Debug, uniffi::Record)]
+#[derive(Debug, Clone, uniffi::Record)]
 pub struct Emoji {
     emoji: String,
     name: String,
@@ -153,10 +150,9 @@ pub struct UnicodeVersion {
 }
 
 /// The skin tone of an emoji.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, uniffi::Enum, Copy, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[non_exhaustive]
-#[derive(uniffi::Enum)]
 pub enum SkinTone {
     Default,
     Light,
@@ -462,7 +458,7 @@ impl convert::AsRef<str> for Emoji {
 impl convert::AsRef<[u8]> for Emoji {
     #[inline]
     fn as_ref(&self) -> &[u8] {
-        self.as_bytes()
+        self.emoji.as_bytes()
     }
 }
 
