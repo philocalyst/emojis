@@ -306,7 +306,7 @@ impl fmt::Display for Emoji {
 }
 
 #[cfg(feature = "serde")]
-impl serde::Serialize for &'static Emoji {
+impl serde::Serialize for Emoji {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: serde::Serializer,
@@ -316,7 +316,7 @@ impl serde::Serialize for &'static Emoji {
 }
 
 #[cfg(feature = "serde")]
-impl<'de> serde::Deserialize<'de> for &'static Emoji {
+impl<'de> serde::Deserialize<'de> for Emoji {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
         D: serde::Deserializer<'de>,
@@ -324,7 +324,7 @@ impl<'de> serde::Deserialize<'de> for &'static Emoji {
         struct Visitor;
 
         impl<'de> serde::de::Visitor<'de> for Visitor {
-            type Value = &'static Emoji;
+            type Value = Emoji;
 
             fn expecting(&self, formatter: &mut core::fmt::Formatter) -> core::fmt::Result {
                 formatter.write_str("a string representing an emoji")
