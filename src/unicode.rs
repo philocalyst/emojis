@@ -7,6 +7,8 @@ use std::str::FromStr;
 use anyhow::{bail, ensure, Context, Result};
 use heck::CamelCase;
 use indexmap::IndexMap;
+use serde::Deserialize;
+use serde::Serialize;
 use then::Some;
 
 const URL: &str = "https://unicode.org/Public/emoji/16.0/emoji-test.txt";
@@ -19,13 +21,13 @@ pub enum Status {
     Component,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub struct UnicodeVersion {
     major: u32,
     minor: u32,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(Debug, Serialize, Deserialize, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum SkinTone {
     Default,
     Light,

@@ -111,9 +111,12 @@ use core::convert;
 use core::fmt;
 use core::hash;
 
+use serde::Deserialize;
+use serde::Serialize;
+
 pub use crate::gen::Group;
 
-#[derive(uniffi::Record, Debug, Clone)] // If using proc macros
+#[derive(uniffi::Record, Serialize, Deserialize, Debug, Clone)] // If using proc macros
 struct SkinToneData {
     first: u16,
     second: u8,
@@ -142,16 +145,16 @@ pub struct Emoji {
 }
 
 /// A Unicode version.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, uniffi::Record, PartialOrd, Ord)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[derive(
+    Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Hash, uniffi::Record, PartialOrd, Ord,
+)]
 pub struct UnicodeVersion {
     major: u32,
     minor: u32,
 }
 
 /// The skin tone of an emoji.
-#[derive(Debug, Clone, uniffi::Enum, Copy, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[derive(Debug, Deserialize, Serialize, Clone, uniffi::Enum, Copy, PartialEq, Eq, Hash)]
 #[non_exhaustive]
 pub enum SkinTone {
     Default,
@@ -305,7 +308,6 @@ impl fmt::Display for Emoji {
     }
 }
 
-#[cfg(feature = "serde")]
 impl serde::Serialize for Emoji {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -315,7 +317,6 @@ impl serde::Serialize for Emoji {
     }
 }
 
-#[cfg(feature = "serde")]
 impl<'de> serde::Deserialize<'de> for Emoji {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
@@ -436,9 +437,7 @@ pub fn iter() -> impl Iterator<Item = &'static Emoji> + Clone {
 #[inline]
 #[uniffi::export]
 pub fn get(s: &str) -> Option<Emoji> {
-    crate::gen::unicode::MAP
-        .get(s)
-        .map(|&i| crate::gen::EMOJIS[i].clone())
+    crate::gen::unicode::get_emoji_index(s).map(|i| crate::gen::EMOJIS[i].clone())
 }
 
 /// Lookup an emoji by GitHub shortcode.
@@ -453,7 +452,5 @@ pub fn get(s: &str) -> Option<Emoji> {
 /// ```
 #[inline]
 pub fn get_by_shortcode(s: &str) -> Option<&'static Emoji> {
-    crate::gen::shortcode::MAP
-        .get(s)
-        .map(|&i| &crate::gen::EMOJIS[i])
+    crate::gen::shortcode::get_emoji_index(s).map(|i| &crate::gen::EMOJIS[i])
 }
