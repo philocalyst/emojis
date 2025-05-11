@@ -62,19 +62,16 @@
 //! ```
 //! let hand = emojis::get("🤌").unwrap();
 //! assert_eq!(hand.as_str(), "\u{1f90c}");
-//! assert_eq!(hand.as_bytes(), &[0xf0, 0x9f, 0xa4, 0x8c]);
-//! assert_eq!(hand.name(), "pinched fingers");
-//! assert_eq!(hand.unicode_version(), emojis::UnicodeVersion::new(13, 0));
-//! assert_eq!(hand.group(), emojis::Group::PeopleAndBody);
-//! assert_eq!(hand.skin_tone(), Some(emojis::SkinTone::Default));
-//! assert_eq!(hand.shortcode(), Some("pinched_fingers"));
+//! assert_eq!(hand.raw_bytes(), &[0xf0, 0x9f, 0xa4, 0x8c]);
 //! ```
 //!
 //! Use [`skin_tones()`][Emoji::skin_tones] to iterate over the skin tones of an
 //! emoji.
 //! ```
-//! let raised_hands = emojis::get("🙌🏼").unwrap();
-//! let skin_tones: Vec<_> = raised_hands.skin_tones().unwrap().map(|e| e.as_str()).collect();
+//! let raised_hands: emojis::Emoji = emojis::get("🙌🏼").unwrap();
+//! let variants = raised_hands.skin_tones();
+//! let iter = variants.iter().cloned();
+//! let skin_tones: Vec<_> = iter.collect();
 //! assert_eq!(skin_tones, ["🙌", "🙌🏻", "🙌🏼", "🙌🏽", "🙌🏾", "🙌🏿"]);
 //! ```
 //!
@@ -85,13 +82,6 @@
 //! assert_eq!(faces, ["😀", "😃", "😄", "😁", "😆"]);
 //! ```
 //!
-//! It is recommended to filter the list by the maximum Unicode version that you
-//! wish to support.
-//! ```
-//! let iter = emojis::iter().filter(|e| {
-//!     e.unicode_version() < emojis::UnicodeVersion::new(13, 0)
-//! });
-//! ```
 //!
 //! Using the [`Group`] enum you can iterate over all emojis in a group.
 //! ```
@@ -111,12 +101,9 @@ use core::convert;
 use core::fmt;
 use core::hash;
 
-use serde::Deserialize;
-use serde::Serialize;
-
 pub use crate::gen::Group;
 
-#[derive(uniffi::Record, Serialize, Deserialize, Debug, Clone)] // If using proc macros
+#[derive(uniffi::Record, Debug, Clone)] // If using proc macros
 struct SkinToneData {
     first: u16,
     second: u8,
@@ -145,16 +132,16 @@ pub struct Emoji {
 }
 
 /// A Unicode version.
-#[derive(
-    Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Hash, uniffi::Record, PartialOrd, Ord,
-)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, uniffi::Record, PartialOrd, Ord)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct UnicodeVersion {
     major: u32,
     minor: u32,
 }
 
 /// The skin tone of an emoji.
-#[derive(Debug, Deserialize, Serialize, Clone, uniffi::Enum, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, uniffi::Enum, Copy, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[non_exhaustive]
 pub enum SkinTone {
     Default,
@@ -219,7 +206,7 @@ pub fn skin_tones(emoji: &Emoji) -> Vec<Emoji> {
 }
 
 impl Emoji {
-    pub fn skin_tones(&'static self) -> Vec<Emoji> {
+    pub fn skin_tones(&self) -> Vec<Emoji> {
         let data = match &self.skin_tone {
             Some(d) => d,
             None => return vec![],
@@ -230,6 +217,27 @@ impl Emoji {
             .take(data.second as usize)
             .cloned()
             .collect()
+    }
+
+    /// Returns the first GitHub shortcode for this emoji.
+    ///
+    /// Most emojis only have zero or one shortcode but for a few there are
+    /// multiple. Use the [`shortcodes()`][Emoji::shortcodes] method to return
+    /// all the shortcodes. See [gemoji] for more information.
+    ///
+    /// For emojis that have zero shortcodes this will return `None`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// let thinking = emojis::get("🤔").unwrap();
+    /// assert_eq!(thinking.shortcode().unwrap(), "thinking");
+    /// ```
+    ///
+    /// [gemoji]: https://github.com/github/gemoji
+    #[inline]
+    pub fn shortcode(self) -> Option<String> {
+        self.aliases.and_then(|aliases| aliases.first().cloned())
     }
 }
 
@@ -308,6 +316,7 @@ impl fmt::Display for Emoji {
     }
 }
 
+#[cfg(feature = "serde")]
 impl serde::Serialize for Emoji {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -317,6 +326,7 @@ impl serde::Serialize for Emoji {
     }
 }
 
+#[cfg(feature = "serde")]
 impl<'de> serde::Deserialize<'de> for Emoji {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
@@ -437,7 +447,9 @@ pub fn iter() -> impl Iterator<Item = &'static Emoji> + Clone {
 #[inline]
 #[uniffi::export]
 pub fn get(s: &str) -> Option<Emoji> {
-    crate::gen::unicode::get_emoji_index(s).map(|i| crate::gen::EMOJIS[i].clone())
+    crate::gen::unicode::MAP
+        .get(s)
+        .map(|&i| crate::gen::EMOJIS[i].clone())
 }
 
 /// Lookup an emoji by GitHub shortcode.
@@ -452,5 +464,7 @@ pub fn get(s: &str) -> Option<Emoji> {
 /// ```
 #[inline]
 pub fn get_by_shortcode(s: &str) -> Option<&'static Emoji> {
-    crate::gen::shortcode::get_emoji_index(s).map(|i| &crate::gen::EMOJIS[i])
+    crate::gen::shortcode::MAP
+        .get(s)
+        .map(|&i| &crate::gen::EMOJIS[i])
 }
