@@ -101,6 +101,8 @@ use core::convert;
 use core::fmt;
 use core::hash;
 
+use serde;
+
 pub use crate::gen::Group;
 
 #[derive(uniffi::Record, Debug, Clone)] // If using proc macros
@@ -114,7 +116,7 @@ struct SkinToneData {
 ///
 /// See [Unicode.org](https://unicode.org/emoji/charts/full-emoji-list.html) for
 /// more information.
-#[derive(Debug, Clone, uniffi::Record)]
+#[derive(Debug, Deserialize, Serialize, Clone, uniffi::Record)]
 pub struct Emoji {
     emoji: String,
     name: String,
