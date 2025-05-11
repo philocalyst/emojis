@@ -6,24 +6,10 @@ pub mod shortcode;
 pub mod unicode;
 
 use once_cell::sync::Lazy;
-use crate::{Emoji, SkinTone, SkinToneData, UnicodeVersion};
+use crate::emoji::{Emoji, SkinToneData, Group};
 
-/// A category for an emoji.
-///
-/// Based on Unicode CLDR data.
-#[derive(Debug, Clone, Copy, PartialEq, uniffi::Enum, Eq, Hash, PartialOrd, Ord)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub enum Group {
-   SmileysAndEmotion,
-   PeopleAndBody,
-   AnimalsAndNature,
-   FoodAndDrink,
-   TravelAndPlaces,
-   Activities,
-   Objects,
-   Symbols,
-   Flags,
-}
+use crate::{SkinTone, UnicodeVersion};
+
 
 
 /// Build the static emoji data at program startup

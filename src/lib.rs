@@ -94,6 +94,7 @@
 
 uniffi::setup_scaffolding!();
 
+mod emoji;
 mod gen;
 
 use core::cmp;
@@ -101,49 +102,21 @@ use core::convert;
 use core::fmt;
 use core::hash;
 
-use serde;
+use crate::emoji::{Emoji, Group};
 
-pub use crate::gen::Group;
-
-#[derive(uniffi::Record, Debug, Clone)] // If using proc macros
-struct SkinToneData {
-    first: u16,
-    second: u8,
-    tone: SkinTone,
-}
-
-/// Represents an emoji.
-///
-/// See [Unicode.org](https://unicode.org/emoji/charts/full-emoji-list.html) for
-/// more information.
-#[derive(Debug, Deserialize, Serialize, Clone, uniffi::Record)]
-pub struct Emoji {
-    emoji: String,
-    name: String,
-    unicode_version: UnicodeVersion,
-    group: Group,
-
-    // Stores the id of the emoji with the default skin tone, the number of
-    // skin tones and then the skin tone of the current emoji.
-    //
-    //     (<id>, <n>, <skin_tone>)
-    //
-    skin_tone: Option<SkinToneData>,
-
-    aliases: Option<Vec<String>>,
-}
+use serde::{Deserialize, Serialize};
 
 /// A Unicode version.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, uniffi::Record, PartialOrd, Ord)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[derive(
+    Debug, Deserialize, Serialize, Clone, Copy, PartialEq, Eq, Hash, uniffi::Record, PartialOrd, Ord,
+)]
 pub struct UnicodeVersion {
     major: u32,
     minor: u32,
 }
 
 /// The skin tone of an emoji.
-#[derive(Debug, Clone, uniffi::Enum, Copy, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[derive(Debug, Clone, Deserialize, Serialize, uniffi::Enum, Copy, PartialEq, Eq, Hash)]
 #[non_exhaustive]
 pub enum SkinTone {
     Default,
