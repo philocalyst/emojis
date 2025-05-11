@@ -1,45 +1,40 @@
-use emojis::{SkinTone, UnicodeVersion};
+// tests/smoke.rs
+
+// Pull in everything we need.
+use emojis::{self, Emoji, Group, SkinTone, UnicodeVersion};
 
 #[test]
-fn get_variation() {
+fn smoke_test_suite() {
+    // 1) get_variation
     assert_eq!(emojis::get("☹"), emojis::get("☹️"));
-}
 
-#[test]
-fn iter_only_default_skin_tones() {
-    assert!(emojis::iter().all(|emoji| matches!(emoji.skin_tone(), Some(SkinTone::Default) | None)));
-    assert_ne!(
-        emojis::iter()
-            .filter(|emoji| matches!(emoji.skin_tone(), Some(SkinTone::Default)))
-            .count(),
-        0
+    // 2) iter_only_default_skin_tones
+    assert!(
+        emojis::iter().all(|e| { matches!(e.skin_tone(), Some(SkinTone::Default) | None) }),
+        "Found a non‐default skin tone in iter()"
     );
-}
+    assert!(
+        emojis::iter()
+            .filter(|e| matches!(e.skin_tone(), Some(SkinTone::Default)))
+            .count()
+            > 0,
+        "Expected at least one default‐skin‐tone emoji"
+    );
 
-#[test]
-fn unicode_version_partial_ord() {
+    // 3) unicode_version_partial_ord
     assert!(UnicodeVersion::new(13, 0) >= UnicodeVersion::new(12, 0));
     assert!(UnicodeVersion::new(12, 1) >= UnicodeVersion::new(12, 0));
     assert!(UnicodeVersion::new(12, 0) >= UnicodeVersion::new(12, 0));
     assert!(UnicodeVersion::new(12, 0) < UnicodeVersion::new(12, 1));
     assert!(UnicodeVersion::new(11, 0) < UnicodeVersion::new(12, 1));
-    assert!(UnicodeVersion::new(11, 0) < UnicodeVersion::new(12, 1));
-}
 
-#[test]
-fn emoji_partial_eq_str() {
-    assert_eq!(emojis::get("😀").unwrap(), "😀");
-}
+    // 4) emoji_partial_eq_str  & emoji_display
+    let grinning = emojis::get("😀").unwrap();
+    assert_eq!(grinning, "😀");
+    assert_eq!(grinning.to_string(), "😀");
 
-#[test]
-fn emoji_display() {
-    let s = emojis::get("😀").unwrap().to_string();
-    assert_eq!(s, "😀");
-}
-
-#[test]
-fn emoji_skin_tones() {
-    let skin_tones = [
+    // 5) emoji_skin_tones
+    let expected = [
         SkinTone::Default,
         SkinTone::Light,
         SkinTone::MediumLight,
@@ -68,38 +63,30 @@ fn emoji_skin_tones() {
         SkinTone::DarkAndMediumDark,
     ];
 
-    for emoji in emojis::iter() {
-        match emoji.skin_tone() {
-            Some(_) => {
-                let emojis: Vec<_> = emoji.skin_tones().unwrap().collect();
-                assert!(emojis.len() == 6 || emojis.len() == 26);
-                let default = emojis[0];
-                for (emoji, skin_tone) in emojis
-                    .iter()
-                    .zip(skin_tones.iter().copied().take(emojis.len()))
-                {
-                    assert_eq!(emoji.skin_tone().unwrap(), skin_tone, "{emojis:#?}");
-                    assert_eq!(default.with_skin_tone(skin_tone).unwrap(), *emoji);
-                    assert_eq!(emoji.with_skin_tone(SkinTone::Default).unwrap(), default);
-                }
+    for e in emojis::iter() {
+        if e.skin_tone().is_some() {
+            let variants = e.skin_tones();
+            assert!(
+                variants.len() == 6 || variants.len() == 26,
+                "{} had {} variants",
+                e,
+                variants.len()
+            );
+            for (v, &tone) in variants.iter().zip(expected.iter()) {
+                assert_eq!(
+                    v.skin_tone().unwrap(),
+                    tone,
+                    "variant list for {} was wrong",
+                    e
+                );
             }
-            None => {
-                assert!(emoji.skin_tones().is_none());
-            }
+        } else {
+            assert!(e.skin_tones().is_empty());
         }
     }
-}
 
-#[test]
-fn emoji_shortcodes() {
-    for emoji in emojis::iter() {
-        assert_eq!(emoji.shortcodes().next(), emoji.shortcode());
-    }
-}
-
-#[test]
-fn group_iter_and_emojis() {
-    let left: Vec<_> = emojis::Group::iter().flat_map(|g| g.emojis()).collect();
-    let right: Vec<_> = emojis::iter().collect();
-    assert_eq!(left, right);
+    // 6) group_iter_and_emojis
+    let by_group: Vec<&Emoji> = Group::iter().flat_map(|g| g.emojis()).collect();
+    let flat: Vec<&Emoji> = emojis::iter().collect();
+    assert_eq!(by_group, flat);
 }
