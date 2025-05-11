@@ -39,7 +39,7 @@ fn replace(mut s: &str, mut o: impl Write) -> io::Result<()> {
                 // Output everything preceding, except the first colon.
                 o.write_all(s[..i].as_bytes())?;
                 // Output the emoji.
-                o.write_all(emoji.as_bytes())?;
+                o.write_all(emoji.raw_bytes())?;
                 // Update the string to past the last colon.
                 s = &s[j..];
             }
