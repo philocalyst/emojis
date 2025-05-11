@@ -291,7 +291,6 @@ impl fmt::Display for Emoji {
     }
 }
 
-#[cfg(feature = "serde")]
 impl serde::Serialize for Emoji {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -301,7 +300,6 @@ impl serde::Serialize for Emoji {
     }
 }
 
-#[cfg(feature = "serde")]
 impl<'de> serde::Deserialize<'de> for Emoji {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where

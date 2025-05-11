@@ -147,7 +147,7 @@ dependencies = [
 
 [[package]]
 name = "emojis"
-version = "1.0.1"
+version = "1.0.2"
 dependencies = [
  "once_cell",
  "phf",

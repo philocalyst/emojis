@@ -36,7 +36,7 @@ pub struct SkinToneData {
 }
 
 /// Data about an emoji.
-#[derive(Debug, Clone, Deserialize, Serialize, uniffi::Record)]
+#[derive(Debug, Clone, uniffi::Record)]
 pub struct Emoji {
     /// The emoji character.
     pub emoji: String,

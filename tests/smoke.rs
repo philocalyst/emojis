@@ -1,7 +1,7 @@
 // tests/smoke.rs
 
 // Pull in everything we need.
-use emojis::{self, Emoji, Group, SkinTone, UnicodeVersion};
+use emojis::{self, emoji::Emoji, emoji::Group, SkinTone, UnicodeVersion};
 
 #[test]
 fn smoke_test_suite() {
