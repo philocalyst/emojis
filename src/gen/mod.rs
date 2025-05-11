@@ -10,8 +10,6 @@ use crate::emoji::{Emoji, SkinToneData, Group};
 
 use crate::{SkinTone, UnicodeVersion};
 
-
-
 /// Build the static emoji data at program startup
 fn build_emojis() -> Vec<Emoji> {
     vec![

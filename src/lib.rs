@@ -94,8 +94,8 @@
 
 uniffi::setup_scaffolding!();
 
-mod emoji;
-mod gen;
+pub mod emoji;
+pub mod gen;
 
 use core::cmp;
 use core::convert;
