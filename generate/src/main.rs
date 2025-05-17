@@ -207,7 +207,7 @@ fn main() -> Result<()> {
     writeln!(f, "#![cfg_attr(rustfmt, rustfmt::skip)]\n")?;
     writeln!(f, "pub mod shortcode;")?;
     writeln!(f, "pub mod unicode;\n")?;
-    writeln!(f, "use once_cell::sync::Lazy;")?;
+    writeln!(f, "use std::sync::LazyLock;")?;
     writeln!(
         f,
         "use crate::{{Emoji, SkinTone, SkinToneData, UnicodeVersion, Group}};\n"
@@ -227,7 +227,7 @@ fn main() -> Result<()> {
     writeln!(f, "/// Static instance of all emojis")?;
     writeln!(
         f,
-        "pub static EMOJIS: Lazy<Vec<Emoji>> = Lazy::new(build_emojis);\n"
+        "pub static EMOJIS: LazyLock<Vec<Emoji>> = LazyLock::new(build_emojis);\n"
     )?;
 
     // Write access functions
