@@ -5,7 +5,7 @@
 pub mod shortcode;
 pub mod unicode;
 
-use once_cell::sync::Lazy;
+use std::sync::LazyLock;
 use crate::emoji::{Emoji, SkinToneData, Group};
 
 use crate::{SkinTone, UnicodeVersion};
@@ -39057,7 +39057,7 @@ fn build_emojis() -> Vec<Emoji> {
 }
 
 /// Static instance of all emojis
-pub static EMOJIS: Lazy<Vec<Emoji>> = Lazy::new(build_emojis);
+pub static EMOJIS: LazyLock<Vec<Emoji>> = LazyLock::new(build_emojis);
 
 /// Get all available emojis
 pub fn all_emojis() -> &'static [Emoji] {

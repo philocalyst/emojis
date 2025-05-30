@@ -9,9 +9,7 @@ use serde::{Deserialize, Serialize};
 /// A category for an emoji.
 ///
 /// Based on Unicode CLDR data.
-#[derive(
-    Debug, Deserialize, Serialize, Clone, Copy, PartialEq, uniffi::Enum, Eq, Hash, PartialOrd, Ord,
-)]
+#[derive(Debug, Deserialize, Serialize, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum Group {
     SmileysAndEmotion,
     PeopleAndBody,
@@ -25,7 +23,7 @@ pub enum Group {
 }
 
 /// Data about skin tone variants for an emoji.
-#[derive(Debug, Clone, Copy, Deserialize, Serialize, PartialEq, Eq, uniffi::Record)]
+#[derive(Clone, Deserialize, Serialize)]
 pub struct SkinToneData {
     /// Index of the first skin tone variant in the EMOJIS array
     pub first: u16,
@@ -36,7 +34,7 @@ pub struct SkinToneData {
 }
 
 /// Data about an emoji.
-#[derive(Debug, Clone, uniffi::Record)]
+#[derive(Clone, Serialize)]
 pub struct Emoji {
     /// The emoji character.
     pub emoji: String,

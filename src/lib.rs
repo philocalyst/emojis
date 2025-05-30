@@ -92,8 +92,6 @@
 //! [examples/replace.rs]: https://github.com/rossmacarthur/emojis/blob/trunk/examples/replace.rs
 //! [gemoji]: https://github.com/github/gemoji
 
-uniffi::setup_scaffolding!();
-
 pub mod emoji;
 pub mod gen;
 
@@ -104,11 +102,12 @@ use core::hash;
 
 use crate::emoji::{Emoji, Group};
 
+use bitcode::{Decode, Encode};
 use serde::{Deserialize, Serialize};
 
 /// A Unicode version.
 #[derive(
-    Debug, Deserialize, Serialize, Clone, Copy, PartialEq, Eq, Hash, uniffi::Record, PartialOrd, Ord,
+    Debug, Deserialize, Encode, Serialize, Clone, Copy, Decode, PartialEq, Eq, Hash, PartialOrd, Ord,
 )]
 pub struct UnicodeVersion {
     major: u32,
@@ -116,7 +115,7 @@ pub struct UnicodeVersion {
 }
 
 /// The skin tone of an emoji.
-#[derive(Debug, Clone, Deserialize, Serialize, uniffi::Enum, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Encode, Decode, Deserialize, Serialize, Copy, PartialEq, Eq, Hash)]
 #[non_exhaustive]
 pub enum SkinTone {
     Default,
@@ -165,7 +164,6 @@ impl UnicodeVersion {
     }
 }
 
-#[uniffi::export]
 #[inline]
 pub fn skin_tones(emoji: &Emoji) -> Vec<Emoji> {
     let data = match &emoji.skin_tone {
@@ -291,15 +289,6 @@ impl fmt::Display for Emoji {
     }
 }
 
-impl serde::Serialize for Emoji {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        serializer.serialize_str(self.as_str())
-    }
-}
-
 impl<'de> serde::Deserialize<'de> for Emoji {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
@@ -418,7 +407,6 @@ pub fn iter() -> impl Iterator<Item = &'static Emoji> + Clone {
 /// assert_eq!(chipmunk.shortcode().unwrap(), "chipmunk");
 /// ```
 #[inline]
-#[uniffi::export]
 pub fn get(s: &str) -> Option<Emoji> {
     crate::gen::unicode::MAP
         .get(s)

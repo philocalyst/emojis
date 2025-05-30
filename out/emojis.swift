@@ -488,22 +488,55 @@ fileprivate struct FfiConverterString: FfiConverter {
 
 
 /**
- * Represents an emoji.
- *
- * See [Unicode.org](https://unicode.org/emoji/charts/full-emoji-list.html) for
- * more information.
+ * Data about an emoji.
  */
 public struct Emoji {
+    /**
+     * The emoji character.
+     */
     public var emoji: String
+    /**
+     * The CLDR name of the emoji.
+     */
     public var name: String
+    /**
+     * The Unicode version when this emoji was added.
+     */
     public var unicodeVersion: UnicodeVersion
+    /**
+     * The group this emoji belongs to.
+     */
     public var group: Group
+    /**
+     * Skin tone information about this emoji.
+     */
     public var skinTone: SkinToneData?
+    /**
+     * Shortcodes/aliases for this emoji.
+     */
     public var aliases: [String]?
 
     // Default memberwise initializers are never public by default, so we
     // declare one manually.
-    public init(emoji: String, name: String, unicodeVersion: UnicodeVersion, group: Group, skinTone: SkinToneData?, aliases: [String]?) {
+    public init(
+        /**
+         * The emoji character.
+         */emoji: String, 
+        /**
+         * The CLDR name of the emoji.
+         */name: String, 
+        /**
+         * The Unicode version when this emoji was added.
+         */unicodeVersion: UnicodeVersion, 
+        /**
+         * The group this emoji belongs to.
+         */group: Group, 
+        /**
+         * Skin tone information about this emoji.
+         */skinTone: SkinToneData?, 
+        /**
+         * Shortcodes/aliases for this emoji.
+         */aliases: [String]?) {
         self.emoji = emoji
         self.name = name
         self.unicodeVersion = unicodeVersion
@@ -595,14 +628,35 @@ public func FfiConverterTypeEmoji_lower(_ value: Emoji) -> RustBuffer {
 }
 
 
+/**
+ * Data about skin tone variants for an emoji.
+ */
 public struct SkinToneData {
+    /**
+     * Index of the first skin tone variant in the EMOJIS array
+     */
     public var first: UInt16
+    /**
+     * Number of skin tone variants
+     */
     public var second: UInt8
+    /**
+     * The skin tone of this emoji
+     */
     public var tone: SkinTone
 
     // Default memberwise initializers are never public by default, so we
     // declare one manually.
-    public init(first: UInt16, second: UInt8, tone: SkinTone) {
+    public init(
+        /**
+         * Index of the first skin tone variant in the EMOJIS array
+         */first: UInt16, 
+        /**
+         * Number of skin tone variants
+         */second: UInt8, 
+        /**
+         * The skin tone of this emoji
+         */tone: SkinTone) {
         self.first = first
         self.second = second
         self.tone = tone

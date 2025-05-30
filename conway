@@ -1,0 +1,4 @@
+- grid
+- dead cell has three = life
+- live has four+ = dead
+- live has one- = dead
