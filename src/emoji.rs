@@ -34,7 +34,7 @@ pub struct SkinToneData {
 }
 
 /// Data about an emoji.
-#[derive(Clone, Serialize)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct Emoji {
     /// The emoji character.
     pub emoji: String,

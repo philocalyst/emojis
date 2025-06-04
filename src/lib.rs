@@ -92,8 +92,8 @@
 //! [examples/replace.rs]: https://github.com/rossmacarthur/emojis/blob/trunk/examples/replace.rs
 //! [gemoji]: https://github.com/github/gemoji
 
+pub mod common;
 pub mod emoji;
-pub mod gen;
 
 use core::cmp;
 use core::convert;
@@ -170,7 +170,7 @@ pub fn skin_tones(emoji: &Emoji) -> Vec<Emoji> {
         Some(d) => d,
         None => return vec![],
     };
-    crate::gen::EMOJIS
+    crate::common::EMOJIS
         .iter()
         .skip(data.first as usize)
         .take(data.second as usize)
@@ -184,7 +184,7 @@ impl Emoji {
             Some(d) => d,
             None => return vec![],
         };
-        crate::gen::EMOJIS
+        crate::common::EMOJIS
             .iter()
             .skip(data.first as usize)
             .take(data.second as usize)
@@ -233,7 +233,7 @@ impl Emoji {
     /// Iterator over variants with skin_tone (Rust only)
     pub fn skin_tones_iter(&self) -> Option<impl Iterator<Item = &Emoji> + Clone> {
         let d = self.skin_tone.as_ref()?;
-        let slice: &[Emoji] = &*crate::gen::EMOJIS;
+        let slice: &[Emoji] = &*crate::common::EMOJIS;
         Some(slice.iter().skip(d.first as usize).take(d.second as usize))
     }
 }
@@ -286,32 +286,6 @@ impl fmt::Display for Emoji {
     #[inline]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         self.as_str().fmt(f)
-    }
-}
-
-impl<'de> serde::Deserialize<'de> for Emoji {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: serde::Deserializer<'de>,
-    {
-        struct Visitor;
-
-        impl<'de> serde::de::Visitor<'de> for Visitor {
-            type Value = Emoji;
-
-            fn expecting(&self, formatter: &mut core::fmt::Formatter) -> core::fmt::Result {
-                formatter.write_str("a string representing an emoji")
-            }
-
-            fn visit_str<E>(self, value: &str) -> Result<Self::Value, E>
-            where
-                E: serde::de::Error,
-            {
-                crate::get(value).ok_or_else(|| E::custom("invalid emoji"))
-            }
-        }
-
-        deserializer.deserialize_str(Visitor)
     }
 }
 
@@ -372,7 +346,7 @@ impl Group {
 /// ```
 #[inline]
 pub fn iter() -> impl Iterator<Item = &'static Emoji> + Clone {
-    crate::gen::EMOJIS
+    crate::common::EMOJIS
         .iter()
         .filter(|emoji| matches!(emoji.skin_tone(), Some(SkinTone::Default) | None))
 }
@@ -408,9 +382,9 @@ pub fn iter() -> impl Iterator<Item = &'static Emoji> + Clone {
 /// ```
 #[inline]
 pub fn get(s: &str) -> Option<Emoji> {
-    crate::gen::unicode::MAP
+    crate::common::unicode::MAP
         .get(s)
-        .map(|&i| crate::gen::EMOJIS[i].clone())
+        .map(|&i| crate::common::EMOJIS[i].clone())
 }
 
 /// Lookup an emoji by GitHub shortcode.
@@ -425,7 +399,7 @@ pub fn get(s: &str) -> Option<Emoji> {
 /// ```
 #[inline]
 pub fn get_by_shortcode(s: &str) -> Option<&'static Emoji> {
-    crate::gen::shortcode::MAP
+    crate::common::shortcode::MAP
         .get(s)
-        .map(|&i| &crate::gen::EMOJIS[i])
+        .map(|&i| &crate::common::EMOJIS[i])
 }
